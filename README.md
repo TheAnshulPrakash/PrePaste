@@ -1,5 +1,8 @@
 # PrePaste
 
+![PrePaste](images/PrePaste_banner.png)
+
+
 > **The privacy layer between Ctrl+C and Ctrl+V.**
 
 PrePaste is a local-first clipboard privacy assistant that helps prevent accidental data leaks before they happen.
@@ -17,6 +20,8 @@ Nothing leaves your computer.
 ---
 
 # Why PrePaste?
+
+![Problem](images/News.png)
 
 The workflow usually looks like this:
 
