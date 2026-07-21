@@ -273,7 +273,7 @@ Each redaction event is stored locally using the following structure:
 Clone the repository:
 
 ```bash
-git clone https://github.com/<username>/PrePaste.git
+git clone https://github.com/TheAnshulPrakash/PrePaste.git
 
 cd PrePaste
 ```
@@ -292,7 +292,44 @@ python -m spacy download en_core_web_lg
 
 ---
 
-# Running PrePaste
+# Quick Start
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/TheAnshulPrakash/PrePaste.git
+cd PrePaste
+```
+
+2. Install the required dependencies:
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+3. Download the required spaCy language model:
+
+```powershell
+python -m spacy download en_core_web_lg
+```
+
+4. Start PrePaste:
+
+```powershell
+flet run notif.py
+```
+
+The application will begin monitoring clipboard activity in the background. Whenever sensitive information is copied, PrePaste will analyze it locally and notify you if redaction is recommended.
+
+---
+
+# Running Individual Components
+
+Launch the main application:
+
+```powershell
+flet run notif.py
+```
 
 Launch the settings application:
 
