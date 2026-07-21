@@ -13,9 +13,9 @@ PrePaste integrates seamlessly into that workflow. It monitors clipboard activit
 
 Everything runs locally.
 
-Nothing is uploaded.
-
 Nothing leaves your computer.
+
+Find windows build here: https://drive.google.com/file/d/1rbPI8avOXwrpAFMGu8OVKnGyXdNCi5Nz/view?usp=sharing
 
 ---
 
