@@ -8,6 +8,10 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+build_notif_windows/
+build_notification/
+build_viewer/
+notification/
 build/
 develop-eggs/
 dist/

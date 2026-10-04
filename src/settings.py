@@ -27,13 +27,27 @@ from config_store import (
     settings_path,
 )
 
-PURPLE = "#7357E8"
-INK = "#252033"
-MUTED = "#756E82"
-CANVAS = "#F7F5FC"
-CARD = "#FFFFFF"
-BORDER = "#E8E3F1"
-SUCCESS = "#23A56A"
+PRIMARY = "#D9DCE1"
+PRIMARY_SOFT = "#BFC3CA"
+
+INK = "#F4F4F2"
+MUTED = "#9A9DA4"
+MUTED_SOFT = "#70747C"
+
+CANVAS = "#0B0D10"
+CARD = "#12151A"
+CARD_HOVER = "#171A20"
+
+BORDER = "#252A31"
+BORDER_SOFT = "#1D2127"
+
+SUCCESS = "#8FD3A8"
+WARNING = "#E6C98A"
+DANGER = "#E59AA5"
+
+ICON_BG = "#1A1D22"
+
+LOGO_IMAGE = "assets/images/PrePasteBeaver.png"
 
 ENTITY_DETAILS = {
     "EMAIL_ADDRESS": ("Email address", "Personal and work email"),
@@ -67,7 +81,7 @@ CREDENTIAL_DETAILS = {
 
 def main(page: ft.Page) -> None:
     page.title = "PrePaste Settings"
-    page.theme_mode = ft.ThemeMode.LIGHT
+    page.theme_mode = ft.ThemeMode.DARK
     page.bgcolor = CANVAS
     page.padding = 0
     page.window.width = 960
@@ -99,7 +113,7 @@ def main(page: ft.Page) -> None:
             spacing=4,
             controls=[
                 ft.Text(
-                    eyebrow.upper(), size=10, weight=ft.FontWeight.W_700, color=PURPLE
+                    eyebrow.upper(), size=10, weight=ft.FontWeight.W_700, color=PRIMARY
                 ),
                 ft.Text(heading, size=28, weight=ft.FontWeight.BOLD, color=INK),
                 ft.Text(copy, size=13, color=MUTED),
@@ -110,7 +124,7 @@ def main(page: ft.Page) -> None:
         return ft.Container(
             bgcolor=CARD,
             border=ft.Border.all(1, BORDER),
-            border_radius=16,
+            border_radius=14,
             padding=padding,
             content=ft.Column(spacing=12, controls=list(controls)),
         )
@@ -155,8 +169,8 @@ def main(page: ft.Page) -> None:
                         height=34,
                         border_radius=10,
                         alignment=ft.Alignment.CENTER,
-                        bgcolor="#F0ECFF",
-                        content=ft.Icon(icon, size=17, color=PURPLE),
+                        bgcolor=ICON_BG,
+                        content=ft.Icon(icon, size=17, color=PRIMARY),
                     ),
                     ft.Column(
                         expand=True,
@@ -170,7 +184,7 @@ def main(page: ft.Page) -> None:
                     ),
                     ft.Switch(
                         value=bool(state[bucket].get(key, False)),
-                        active_color=PURPLE,
+                        active_color=PRIMARY,
                         on_change=on_change,
                     ),
                 ],
@@ -221,7 +235,7 @@ def main(page: ft.Page) -> None:
             section_header(
                 "Credential patterns",
                 f"{enabled} of {len(CREDENTIAL_TYPES)} patterns enabled",
-                ft.Switch(value=all_enabled, active_color=PURPLE, on_change=set_all),
+                ft.Switch(value=all_enabled, active_color=PRIMARY, on_change=set_all),
             ),
             ft.Divider(height=1, color=BORDER),
         ]
@@ -263,7 +277,7 @@ def main(page: ft.Page) -> None:
             return ft.Switch(
                 label=label,
                 value=bool(state.get(key)),
-                active_color=PURPLE,
+                active_color=PRIMARY,
                 on_change=changed,
                 tooltip=description,
             )
@@ -276,7 +290,7 @@ def main(page: ft.Page) -> None:
             f"{int(float(state['confidence_threshold']) * 100)}% confidence",
             size=12,
             weight=ft.FontWeight.W_600,
-            color=PURPLE,
+            color=PRIMARY,
         )
         return [
             title(
@@ -293,7 +307,7 @@ def main(page: ft.Page) -> None:
                     value=state["model"],
                     options=model_options,
                     border_color=BORDER,
-                    focused_border_color=PURPLE,
+                    focused_border_color=PRIMARY,
                     on_text_change=model_changed,
                 ),
             ),
@@ -308,7 +322,7 @@ def main(page: ft.Page) -> None:
                     max=100,
                     divisions=13,
                     value=int(float(state["confidence_threshold"]) * 100),
-                    active_color=PURPLE,
+                    active_color=PRIMARY,
                     on_change=threshold_changed,
                 ),
             ),
@@ -361,7 +375,7 @@ def main(page: ft.Page) -> None:
                         for limit in (25, 50, 100, 250)
                     ],
                     border_color=BORDER,
-                    focused_border_color=PURPLE,
+                    focused_border_color=PRIMARY,
                     on_text_change=history_limit_changed,
                 ),
             ),
@@ -528,7 +542,9 @@ def main(page: ft.Page) -> None:
                     spacing=1,
                     controls=[
                         ft.Text(happened, size=10, color=MUTED),
-                        ft.Text(str(entry.get("source", "Scan")), size=9, color=PURPLE),
+                        ft.Text(
+                            str(entry.get("source", "Scan")), size=9, color=PRIMARY
+                        ),
                     ],
                 ),
             ]
@@ -576,7 +592,7 @@ def main(page: ft.Page) -> None:
                             bgcolor="#EEE9FF",
                             alignment=ft.Alignment.CENTER,
                             content=ft.Icon(
-                                ft.Icons.SHIELD_OUTLINED, size=27, color=PURPLE
+                                ft.Icons.SHIELD_OUTLINED, size=27, color=PRIMARY
                             ),
                         ),
                         ft.Column(
@@ -625,7 +641,7 @@ def main(page: ft.Page) -> None:
             card(
                 section_header(
                     "Local files",
-                    "These files belong only to the current Windows user.",
+                    "These files belong only to the current user.",
                 ),
                 ft.Text(
                     f"Settings: {settings_path()}", size=11, color=INK, selectable=True
@@ -633,7 +649,7 @@ def main(page: ft.Page) -> None:
                 ft.Text(
                     f"History: {history_path()}", size=11, color=INK, selectable=True
                 ),
-                ft.Text("Version 1.0", size=11, color=MUTED),
+                ft.Text("Version 1.0 ● Beaver", size=11, color=MUTED),
             ),
         ]
 
@@ -651,8 +667,8 @@ def main(page: ft.Page) -> None:
         content.controls = views[name]()
         for label, button in nav_buttons.items():
             selected = label == name
-            button.bgcolor = "#EEE9FF" if selected else None
-            nav_labels[label].color = PURPLE if selected else MUTED
+            button.bgcolor = "#1B1F25" if selected else None
+            nav_labels[label].color = PRIMARY if selected else MUTED
         page.update()
 
     def navigation_item(label: str, icon: str) -> ft.Control:
@@ -664,7 +680,7 @@ def main(page: ft.Page) -> None:
             on_click=lambda e: show_page(label),
             content=ft.Row(
                 spacing=12,
-                controls=[ft.Icon(icon, size=18, color=PURPLE), label_control],
+                controls=[ft.Icon(icon, size=18, color=PRIMARY), label_control],
             ),
         )
         nav_buttons[label] = item
@@ -694,7 +710,9 @@ def main(page: ft.Page) -> None:
                             height=31,
                             border_radius=10,
                             alignment=ft.Alignment.CENTER,
-                            content=ft.Image("PrePaste.png", width=41, height=41),
+                            content=ft.Image(
+                                LOGO_IMAGE, color=PRIMARY, width=41, height=41
+                            ),
                         ),
                         ft.Column(
                             spacing=0,
@@ -734,7 +752,7 @@ def main(page: ft.Page) -> None:
                             ft.Icon(
                                 ft.Icons.STAR_BORDER_ROUNDED,
                                 size=18,
-                                color=PURPLE,
+                                color=PRIMARY,
                             ),
                             ft.Text("Star Us"),
                         ],
@@ -758,9 +776,6 @@ def main(page: ft.Page) -> None:
         notif_windows_exe = (
             root_dir / "build_notif_windows" / "prepaste_win_notification.exe"
         )
-
-        # Close either possible background application first.
-        # Give the notification and dummy builds different .exe names.
         for process_name in ("prepaste.exe", "prepaste_dummy.exe"):
             subprocess.run(
                 ["taskkill", "/F", "/IM", process_name, "/T"],
@@ -770,11 +785,9 @@ def main(page: ft.Page) -> None:
 
         time.sleep(0.5)
 
-        config = load_settings()  # Same settings file used by the switch.
+        config = load_settings()
         show_flet_notification = config.get("show_flet_notification", False)
 
-        # True → actual Flet notification app
-        # False → dummy app
         exe_path = notif_windows_exe if show_flet_notification else notification_exe
 
         if not exe_path.is_file():
@@ -815,7 +828,7 @@ def main(page: ft.Page) -> None:
                                         "Restart PrePaste",
                                         icon=ft.Icons.REFRESH_ROUNDED,
                                         style=ft.ButtonStyle(
-                                            bgcolor=PURPLE, color=ft.Colors.WHITE
+                                            bgcolor=PRIMARY, color=ft.Colors.WHITE
                                         ),
                                         on_click=restart_prepaste,
                                     ),
