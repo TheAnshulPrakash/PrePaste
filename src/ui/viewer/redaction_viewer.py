@@ -1,14 +1,3 @@
-r"""Standalone side-by-side viewer for saved PrePaste redactions.
-
-The viewer reads %LOCALAPPDATA%\PrePaste\history.json and the small pointer
-file %LOCALAPPDATA%\PrePaste\viewer_selection.json.  The pointer is simply:
-
-    {"id": "the-redaction-id-to-open"}
-
-Use config_store.select_redaction_for_viewer(record_id) in the producing app
-to write that pointer atomically before launching this script.
-"""
-
 from __future__ import annotations
 
 import json
@@ -19,30 +8,29 @@ import flet as ft
 
 from config_store import history_path, viewer_selection_path
 
-PRIMARY = "#D9DCE1"
-INK = "#F4F4F2"
-MUTED = "#9A9DA4"
-MUTED_SOFT = "#70747C"
-
-CANVAS = "#0B0D10"
-CARD = "#12151A"
-CARD_HOVER = "#171A20"
-
-BORDER = "#252A31"
-BORDER_SOFT = "#1D2127"
-
-ALERT = "#E59AA5"
-ALERT_SOFT = "#21181C"
-
-SUCCESS = "#8FD3A8"
-SUCCESS_SOFT = "#17231C"
-
-WARNING = "#E6C98A"
-WARNING_SOFT = "#241F15"
+from constants import (
+    PRIMARY,
+    INK,
+    MUTED,
+    BORDER,
+    CARD,
+    CANVAS,
+    ALERT,
+    SUCCESS,
+    ALERT_SOFT,
+    MAUVE,
+    REDACTION_VIEW,
+    EMPTY_ICON,
+    PANE_HEADER,
+    WARNING_SOFT,
+    WARNING_ICON,
+    WARNING_TEXT,
+    ALERT_TEXT,
+)
 
 
 def _read_json(path: Path) -> tuple[Any | None, str | None]:
-    """Read JSON without letting a missing or half-written file crash the UI."""
+
     try:
         with path.open("r", encoding="utf-8") as file:
             return json.load(file), None
@@ -97,7 +85,6 @@ def load_redactions() -> tuple[list[dict[str, Any]], str | None]:
 
 
 def load_selected_id() -> tuple[str | None, str | None]:
-    """Support both {"id": "..."} and a bare JSON string for convenience."""
     raw, error = _read_json(viewer_selection_path())
     if error:
         return None, error
@@ -111,7 +98,6 @@ def load_selected_id() -> tuple[str | None, str | None]:
 
 
 def resolve_record() -> tuple[dict[str, Any] | None, str, str | None]:
-    """Resolve the pointer, with a safe fallback to the newest usable record."""
     records, history_error = load_redactions()
     if history_error:
         return None, "", f"Could not load history: {history_error}."
@@ -139,7 +125,7 @@ def resolve_record() -> tuple[dict[str, Any] | None, str, str | None]:
 
 def main(page: ft.Page) -> None:
     page.title = "PrePaste Redaction Viewer"
-    page.theme_mode = ft.ThemeMode.DARK
+    page.theme_mode = ft.ThemeMode.LIGHT
     page.bgcolor = CANVAS
     page.padding = 20
     page.window.width = 1420
@@ -200,7 +186,9 @@ def main(page: ft.Page) -> None:
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     spacing=8,
                     controls=[
-                        ft.Icon(ft.Icons.FOLDER_OFF_OUTLINED, size=44, color="#B2AABD"),
+                        ft.Icon(
+                            ft.Icons.FOLDER_OFF_OUTLINED, size=44, color=EMPTY_ICON
+                        ),
                         ft.Text(
                             "Nothing to review yet",
                             size=17,
@@ -247,7 +235,7 @@ def main(page: ft.Page) -> None:
             return ft.Container(
                 expand=True,
                 padding=ft.Padding.symmetric(horizontal=14, vertical=10),
-                bgcolor="#15181D",
+                bgcolor=CARD,
                 content=ft.Row(
                     controls=[
                         ft.Container(
@@ -296,9 +284,8 @@ def main(page: ft.Page) -> None:
                             content=ft.Text(
                                 str(number),
                                 size=11,
-                                color="#E1E3E6",
+                                color=MAUVE,
                                 font_family="Consolas",
-                                selectable=True,
                             ),
                         ),
                         ft.Container(
@@ -342,7 +329,7 @@ def main(page: ft.Page) -> None:
 
         return ft.Container(
             expand=True,
-            bgcolor="#101318",
+            bgcolor=CARD,
             border=ft.Border.all(1, BORDER),
             border_radius=16,
             clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
@@ -416,13 +403,15 @@ def main(page: ft.Page) -> None:
             controls.append(
                 ft.Container(
                     padding=ft.Padding.symmetric(horizontal=12, vertical=8),
-                    bgcolor="#FFF8E8",
+                    bgcolor=WARNING_SOFT,
                     border_radius=10,
                     content=ft.Row(
                         spacing=8,
                         controls=[
-                            ft.Icon(ft.Icons.INFO_OUTLINE, size=16, color="#A77616"),
-                            ft.Text(fallback_note, size=11, color="#725411"),
+                            ft.Icon(
+                                ft.Icons.INFO_OUTLINE, size=16, color=REDACTION_VIEW
+                            ),
+                            ft.Text(fallback_note, size=11, color=WARNING_TEXT),
                         ],
                     ),
                 )
@@ -440,7 +429,7 @@ def main(page: ft.Page) -> None:
                             ft.Text(
                                 "Red dots mark lines where sensitive content was detected.",
                                 size=11,
-                                color="#D59AA4",
+                                color=ALERT_TEXT,
                             ),
                         ],
                     ),
@@ -449,7 +438,7 @@ def main(page: ft.Page) -> None:
                 ft.Text(
                     f"Record ID: {record['id']}",
                     size=10,
-                    color="#A49BAC",
+                    color=MAUVE,
                     selectable=True,
                 ),
             ]
@@ -470,6 +459,5 @@ def main(page: ft.Page) -> None:
 
 
 if __name__ == "__main__":
-    # Port 0 asks Windows for a fresh local port; it avoids sharing the port
-    # already used by the Settings Flet process.
+
     ft.run(main, port=0)
