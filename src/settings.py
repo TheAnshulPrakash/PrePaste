@@ -1,16 +1,8 @@
-"""PrePaste Settings — a standalone desktop control panel.
-
-Run with:  python settings.py
-Preferences are saved in %LOCALAPPDATA%\\PrePaste\\settings.json.
-"""
-
 from __future__ import annotations
 
 from datetime import datetime
-import os
 from pathlib import Path
 import subprocess
-import sys
 import time
 import flet as ft
 

@@ -19,9 +19,9 @@ import flet as ft
 
 from config_store import history_path, viewer_selection_path
 
-# ── PrePaste Dark Viewer Theme ───────────────────────────
-
 PRIMARY = "#D9DCE1"
+PRIMARY_SOFT = "#BFC3CA"
+
 INK = "#F4F4F2"
 MUTED = "#9A9DA4"
 MUTED_SOFT = "#70747C"
@@ -33,14 +33,11 @@ CARD_HOVER = "#171A20"
 BORDER = "#252A31"
 BORDER_SOFT = "#1D2127"
 
-ALERT = "#E59AA5"
-ALERT_SOFT = "#21181C"
-
 SUCCESS = "#8FD3A8"
-SUCCESS_SOFT = "#17231C"
-
 WARNING = "#E6C98A"
-WARNING_SOFT = "#241F15"
+ALERT = "#E59AA5"
+
+ALERT_SOFT = "#FFF4F5"
 
 
 def _read_json(path: Path) -> tuple[Any | None, str | None]:
@@ -141,7 +138,7 @@ def resolve_record() -> tuple[dict[str, Any] | None, str, str | None]:
 
 def main(page: ft.Page) -> None:
     page.title = "PrePaste Redaction Viewer"
-    page.theme_mode = ft.ThemeMode.DARK
+    page.theme_mode = ft.ThemeMode.LIGHT
     page.bgcolor = CANVAS
     page.padding = 20
     page.window.width = 1420
@@ -249,7 +246,7 @@ def main(page: ft.Page) -> None:
             return ft.Container(
                 expand=True,
                 padding=ft.Padding.symmetric(horizontal=14, vertical=10),
-                bgcolor="#15181D",
+                bgcolor="#F9F7FD",
                 content=ft.Row(
                     controls=[
                         ft.Container(
@@ -298,9 +295,8 @@ def main(page: ft.Page) -> None:
                             content=ft.Text(
                                 str(number),
                                 size=11,
-                                color="#E1E3E6",
+                                color="#A49BAC",
                                 font_family="Consolas",
-                                selectable=True,
                             ),
                         ),
                         ft.Container(
@@ -344,7 +340,7 @@ def main(page: ft.Page) -> None:
 
         return ft.Container(
             expand=True,
-            bgcolor="#101318",
+            bgcolor=CARD,
             border=ft.Border.all(1, BORDER),
             border_radius=16,
             clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
@@ -442,7 +438,7 @@ def main(page: ft.Page) -> None:
                             ft.Text(
                                 "Red dots mark lines where sensitive content was detected.",
                                 size=11,
-                                color="#D59AA4",
+                                color="#8D3C4C",
                             ),
                         ],
                     ),
