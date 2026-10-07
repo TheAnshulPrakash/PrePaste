@@ -11,7 +11,6 @@ from config_store import add_redaction_history_entry, load_settings
 
 print("Loading smaller Presidio model...")
 
-# 1. Define the signal
 pii_detected = signal("pii_detected")
 
 if getattr(sys, "frozen", False):
@@ -116,7 +115,6 @@ def redact_clipboard():
 
         results = analyzer.analyze(text=text, language="en")
 
-        # Filter for only ALLOWED_ENTITIES
         filtered_results = [
             res
             for res in results
@@ -127,7 +125,6 @@ def redact_clipboard():
             anonymized_result = anonymizer.anonymize(
                 text=text, analyzer_results=filtered_results
             )
-            # Write the safe text back to the clipboard
             pyperclip.copy(anonymized_result.text)
             line_numbers = sorted(
                 {text.count("\n", 0, result.start) + 1 for result in filtered_results}
@@ -145,14 +142,10 @@ def redact_clipboard():
         return None
 
 
-# 4. Connect the function to the signal
-
-
 def scan_for_pii(text):
     print(ALLOWED_ENTITIES)
     lines = text.splitlines()
 
-    # Store our formatted results here
     detected_pii_list = []
 
     for line_number, line_text in enumerate(lines, start=1):
@@ -183,8 +176,6 @@ def scan_for_pii(text):
 
             print(f"Found: {pii_info} | Text: '{extracted_pii}'")
 
-            # Signal to notif
-
     pii_detected.send(
         "clipboard_observer",
         full_text=text,
@@ -207,14 +198,10 @@ def run():
         time.sleep(0.2)
 
         try:
-            # Try to read the clipboard
             text = pyperclip.paste()
         except pyperclip.PyperclipException:
-            # If the clipboard is temporarily locked by Windows or another app,
-            # ignore the error and wait for the next loop to try again.
             continue
         except Exception as e:
-            # Catching general exceptions just in case so the thread doesn't die
             continue
 
         if text != last_text:

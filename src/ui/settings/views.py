@@ -17,7 +17,7 @@ from config_store import (
     settings_path,
 )
 
-from .constants import (
+from constants import (
     PRIMARY,
     INK,
     MUTED,
@@ -111,9 +111,9 @@ def credentials_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
 
 def preferences_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
     model_options = [
-        ft.dropdown.Option(
-            "en_core_web_sm",
-            "Small — quicker, lower memory",
+        ft.DropdownOption(
+            key="en_core_web_sm",
+            text="Small — quicker, lower memory",
         ),
     ]
 
@@ -164,14 +164,14 @@ def preferences_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
         card(
             section_header(
                 "Language model",
-                "Small is fast; Large is more accurate with people and organisations.",
+                "Choose an appropriate language model",
             ),
             ft.Dropdown(
                 value=state["model"],
                 options=model_options,
                 border_color=BORDER,
                 focused_border_color=PRIMARY,
-                on_text_change=model_changed,
+                on_select=model_changed,
             ),
         ),
         card(
@@ -183,41 +183,10 @@ def preferences_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
             ft.Slider(
                 min=50,
                 max=100,
-                divisions=13,
+                divisions=7,
                 value=int(float(state["confidence_threshold"]) * 100),
                 active_color=PRIMARY,
                 on_change=threshold_changed,
-            ),
-        ),
-        card(
-            section_header(
-                "Behaviour",
-                "These switches are saved for the clipboard companion to use.",
-            ),
-            simple_toggle(
-                "scan_clipboard",
-                "Monitor clipboard",
-                "Scan new clipboard text for enabled detectors.",
-            ),
-            simple_toggle(
-                "show_flet_notification",
-                "Show Windows native notification instead",
-                "Keep the Hide Sensitive action available.",
-            ),
-            simple_toggle(
-                "launch_at_sign_in",
-                "Open when I sign in",
-                "Saved for the PrePaste launcher; this app does not edit system startup entries.",
-            ),
-            simple_toggle(
-                "show_desktop_alerts",
-                "Show desktop alerts",
-                "Show the compact warning window when a match is found.",
-            ),
-            simple_toggle(
-                "always_on_top",
-                "Keep warning above other windows",
-                "Keep the compact warning visible while you decide.",
             ),
         ),
         card(
@@ -479,101 +448,86 @@ def history_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
 
 
 def about_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
-    location = str(data_directory())
+    github_url = "https://github.com/TheAnshulPrakash/PrePaste"
+    url_launcher = ft.UrlLauncher()
+    url = ft.TextField(label="URL to open", value=github_url, expand=True)
+
+    async def launch_default():
+        await url_launcher.launch_url(url.value)
 
     return [
-        title(
-            "PrePaste",
-            "Paste with confidence",
-            "A local-first privacy guard for the information that should not leave your clipboard by accident.",
-        ),
         card(
-            ft.Row(
+            ft.Column(
+                spacing=12,
                 controls=[
-                    ft.Container(
-                        width=48,
-                        height=48,
-                        border_radius=14,
-                        bgcolor="#EEE9FF",
-                        alignment=ft.Alignment.CENTER,
-                        content=ft.Icon(
-                            ft.Icons.SHIELD_OUTLINED,
-                            size=27,
-                            color=PRIMARY,
-                        ),
+                    section_header(
+                        "Contribute",
+                        "Have a feature request, bug report, or test contribution?",
                     ),
-                    ft.Column(
-                        spacing=2,
-                        controls=[
-                            ft.Text(
-                                "PrePaste",
-                                size=18,
-                                weight=ft.FontWeight.BOLD,
-                                color=INK,
-                            ),
-                            ft.Text(
-                                "Settings & privacy control centre",
-                                size=11,
-                                color=MUTED,
-                            ),
-                        ],
+                    ft.Text(
+                        "Raise an issue or open a PR. We'd really appreciate "
+                        "taking a look.",
+                        size=12,
+                        color=MUTED,
                     ),
-                ]
-            ),
-            ft.Divider(color=BORDER),
-            ft.Text(
-                "PrePaste checks clipboard text locally using Microsoft "
-                "Presidio and optional, format-based credential detectors. "
-                "It warns you before a paste may expose personal data or "
-                "secrets to online forums or LLMs.",
-                size=13,
-                color=INK,
-            ),
-            ft.Text(
-                "Privacy promise",
-                size=14,
-                weight=ft.FontWeight.W_700,
-                color=INK,
-            ),
-            ft.Text(
-                "Your copied text is processed on your computer. When "
-                "history is enabled, each redaction stores the full "
-                "original and redacted text only in this Windows user's "
-                "local history file.",
-                size=12,
-                color=MUTED,
-            ),
-            ft.Text(
-                "If you like this project, consider giving it a star ⭐",
-                size=12,
-                color=MUTED,
-            ),
-            ft.Text(
-                "Found a bug? Have a feature request? I'd love to hear "
-                "from you 😊\nPlease open an issue on GitHub.",
-                size=12,
-                color=MUTED,
+                    ft.FilledButton(
+                        "Open GitHub",
+                        icon=ft.Icons.OPEN_IN_NEW,
+                        bgcolor=PRIMARY,
+                        on_click=launch_default,
+                    ),
+                ],
             ),
         ),
         card(
-            section_header(
-                "Local files",
-                "These files belong only to the current user.",
+            ft.Column(
+                spacing=10,
+                controls=[
+                    section_header(
+                        "Local data",
+                        "Stored under the current Windows user.",
+                    ),
+                    ft.Text(
+                        f"Settings: {settings_path()}",
+                        size=11,
+                        color=INK,
+                        selectable=True,
+                    ),
+                    ft.Text(
+                        f"History: {history_path()}",
+                        size=11,
+                        color=INK,
+                        selectable=True,
+                    ),
+                ],
             ),
-            ft.Text(
-                f"Settings: {settings_path()}",
-                size=11,
-                color=INK,
-                selectable=True,
+        ),
+        card(
+            ft.Column(
+                spacing=14,
+                controls=[
+                    ft.Text(
+                        "PrePaste monitors your clipboard and checks "
+                        "copied text for personal information and secrets "
+                        "before you paste it somewhere sensitive.",
+                        size=13,
+                        color=INK,
+                    ),
+                    ft.Text(
+                        "Clipboard data stays on your computer. If history "
+                        "is enabled, your redaction history is stored locally "
+                        "under the current Windows user.",
+                        size=12,
+                        color=MUTED,
+                    ),
+                ],
             ),
-            ft.Text(
-                f"History: {history_path()}",
-                size=11,
-                color=INK,
-                selectable=True,
-            ),
-            ft.Text(
-                "Version 1.0 ● Beaver",
+        ),
+        ft.Container(
+            alignment=ft.Alignment.CENTER,
+            padding=ft.Padding.only(top=4),
+            content=ft.Text(
+                "v1.0.0 · Beaver",
                 size=11,
                 color=MUTED,
             ),

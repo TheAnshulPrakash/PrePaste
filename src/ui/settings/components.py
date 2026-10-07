@@ -1,5 +1,5 @@
 import flet as ft
-from .constants import (
+from constants import (
     PRIMARY,
     INK,
     MUTED,

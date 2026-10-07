@@ -18,13 +18,12 @@ from .views import (
     about_view,
 )
 
-from .constants import (
+from constants import (
     PRIMARY,
     INK,
     MUTED,
     BORDER,
     CARD,
-    ICON_BG,
     CANVAS,
     LOGO_IMAGE,
     SUCCESS,
@@ -174,7 +173,7 @@ def main(page: ft.Page) -> None:
                     spacing=6,
                     controls=[
                         ft.Icon(ft.Icons.CHECK_CIRCLE_OUTLINE, size=13, color=SUCCESS),
-                        ft.Text("Settings are local", size=10, color=MUTED),
+                        ft.Text(" All Settings are local", size=10, color=MUTED),
                     ],
                 ),
             ],

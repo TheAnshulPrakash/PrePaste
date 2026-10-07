@@ -19,8 +19,6 @@ import flet as ft
 
 from config_store import history_path, viewer_selection_path
 
-# ── PrePaste Dark Viewer Theme ───────────────────────────
-
 PRIMARY = "#D9DCE1"
 INK = "#F4F4F2"
 MUTED = "#9A9DA4"
