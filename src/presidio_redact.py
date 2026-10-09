@@ -1,12 +1,4 @@
-"""Report lines containing personally identifiable information with Presidio.
 
-Install dependencies first:
-    pip install -r requirements.txt
-    python -m spacy download en_core_web_lg
-
-Example:
-    python presidio_redact.py "Email alex@example.com or call +1 555-123-4567."
-"""
 
 from __future__ import annotations
 

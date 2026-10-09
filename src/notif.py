@@ -15,7 +15,7 @@ import clipboard_observer
 from clipboard_observer import pii_detected
 from blinker import signal
 import pyperclip
-from config_store import select_redaction_for_viewer
+from ui.settings.config_store import select_redaction_for_viewer
 
 WINDOW_WIDTH = 400
 WINDOW_HEIGHT = 80

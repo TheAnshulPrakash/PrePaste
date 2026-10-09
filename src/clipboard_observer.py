@@ -93,21 +93,17 @@ for api_name, regex_pattern in API_PATTERNS.items():
 
     entity_name = api_name.upper()
 
-    # Add it to our allowed list so the script knows to process it
     ALLOWED_ENTITIES.add(entity_name)
 
-    # Create the Presidio Recognizer (score 1.0 means 100% confidence on regex match)
     pattern = Pattern(
         name=f"{api_name}_pattern", regex=regex_pattern.pattern, score=1.0
     )
     recognizer = PatternRecognizer(supported_entity=entity_name, patterns=[pattern])
 
-    # Add it to the main analyzer
     analyzer.registry.add_recognizer(recognizer)
 
 
 def redact_clipboard():
-    """Reads the current clipboard, anonymizes it, and writes it back."""
     try:
         text = pyperclip.paste()
         if not text.strip():
@@ -135,7 +131,8 @@ def redact_clipboard():
                 redacted_text=anonymized_result.text,
                 line_numbers=line_numbers,
             )
-            print("Clipboard successfully redacted!")
+            # Debugging Print
+            # print("Clipboard successfully redacted!")
             return history_id
     except Exception as e:
         print(f"Failed to redact clipboard: {e}")

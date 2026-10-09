@@ -13,17 +13,11 @@ import clipboard_observer
 from config_store import select_redaction_for_viewer
 
 pii_detected = signal("pii_detected")
-
-# Global state for pausing notifications
 paused_until = 0.0
 if getattr(sys, "frozen", False):
-    # 1. ASSETS_DIR: Where the temporary files (Icon.png) are extracted
     ASSETS_DIR = Path(sys._MEIPASS)
-    # 2. PROJECT_ROOT: Where the .exe physically lives.
-    # sys.executable is usually in the "dist" folder, so we use .parent.parent to go up to the main PrePaste folder.
     PROJECT_ROOT = Path(sys.executable).parent.parent
 else:
-    # Normal Python script mode
     ASSETS_DIR = Path(__file__).resolve().parent
     PROJECT_ROOT = ASSETS_DIR.parent
 ICON_PATH = str(ASSETS_DIR / "assets" / "Icon.png")
