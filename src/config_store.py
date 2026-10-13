@@ -189,11 +189,7 @@ def add_redaction_history_entry(
 
 
 def select_redaction_for_viewer(redaction_id: str) -> Path:
-    """Atomically point the standalone viewer at a saved redaction record.
 
-    A temporary file is written and then replaced, so the viewer never reads a
-    half-written JSON document when the clipboard process and viewer overlap.
-    """
     clean_id = str(redaction_id).strip()
     if not clean_id:
         raise ValueError("A redaction ID is required")

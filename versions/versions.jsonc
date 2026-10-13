@@ -1,0 +1,24 @@
+// This file is not supposed to be changed by contributors
+[
+    {
+        "version": "v1.0.0 · Beaver",
+        "release": "stable",
+        "features": []
+    }
+    // Previous versions are removed and no longer maintained
+    // {
+    //     "version": "0.0.9",
+    //     "release": "beta",
+    //     "features": []
+    // },
+    // {
+    //     "version": "0.0.4",
+    //     "release": "deprecated",
+    //     "features": []
+    // },
+    // {
+    //     "version": "0.0.3",
+    //     "release": "deprecated",
+    //     "features": []
+    // }
+]
