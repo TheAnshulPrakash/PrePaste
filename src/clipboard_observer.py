@@ -198,7 +198,6 @@ def main():
     bar = NotificationBar.starting(menu_items=DEFAULT_MENU_ITEMS)
     bar.show_animated()
 
-    # Connect once. The bar is never recreated.
     bar.primary_clicked.connect(worker.request_redact)
     bar.secondary_clicked.connect(lambda: print("secondary"))
     bar.option_selected.connect(lambda t: print("selected:", t))
@@ -216,12 +215,18 @@ def main():
 
     def on_pii(entities, _text):
         kinds = ", ".join(sorted({e["entity_type"] for e in entities}))
+        options = [
+            f"Line {e['line']}: {e['entity_type']} ({e['confidence']}%)"
+            for e in entities
+        ]
         bar.present(
             status="warning",
             title="Sensitive data detected",
             message=f"{len(entities)} item(s): {kinds}",
             primary_text="Redact",
             secondary_text="Dismiss",
+            options=options,
+            expand_label="{count} findings",
             duration=10000,
         )
 

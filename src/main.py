@@ -1,4 +1,3 @@
-# main.py
 import os
 import re
 import sys
@@ -8,7 +7,6 @@ import signal as py_signal
 from PySide6.QtCore import QThread, QTimer, Signal
 from PySide6.QtWidgets import QApplication
 
-# Only light imports at the top, so the bar can appear immediately.
 from ui.notification.notification_bar import NotificationBar
 from ui.notification.themes import DEFAULT_MENU_ITEMS
 
@@ -52,11 +50,10 @@ API_PATTERNS = {
 
 
 class PiiWorker(QThread):
-    """Loads Presidio, then monitors the clipboard. Never touches the UI directly."""
 
     ready = Signal()
-    pii_found = Signal(list, str)  # detected entities, full text
-    redacted = Signal(int)  # history id (or 0)
+    pii_found = Signal(list, str)
+    redacted = Signal(int)
     failed = Signal(str)
 
     def __init__(self):
@@ -64,16 +61,14 @@ class PiiWorker(QThread):
         self._running = True
         self._redact_requested = False
 
-    # ---- called from the GUI thread ----
     def stop(self):
         self._running = False
 
     def request_redact(self):
         self._redact_requested = True
 
-    # ---- worker thread ----
     def _load_engine(self):
-        # Heavy imports live here so the notification bar can show first.
+
         import pyperclip
         from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer
         from presidio_analyzer.nlp_engine import NlpEngineProvider
@@ -161,7 +156,7 @@ class PiiWorker(QThread):
             return
 
         print("Monitoring clipboard for changes... Press Ctrl+C to stop.")
-        self.ready.emit()  # <- loading animation -> ready state
+        self.ready.emit()
 
         try:
             last_text = self.pyperclip.paste()
@@ -196,21 +191,20 @@ def main():
 
     app = QApplication(sys.argv)
 
-    # Show the loading animation immediately, before Presidio is touched.
     bar = NotificationBar.starting(menu_items=DEFAULT_MENU_ITEMS)
     bar.show_animated()
 
     worker = PiiWorker()
 
     def on_ready():
-        # Replaces the loading animation with the "ready" notification.
+
         bar.set_state(
-            status="risky",
+            status="active",
             title="PrePaste is ready",
             message="Clipboard protection is active.",
             loading=False,
             secondary_text="Dismiss",
-            duration=10000,
+            duration=5000,
         )
 
     def on_pii(entities, _text):
@@ -220,7 +214,7 @@ def main():
             title="Sensitive data detected",
             message=f"{len(entities)} item(s): {kinds}",
             loading=False,
-            primary_text="Redact",  # adjust if your set_state uses a different kwarg
+            primary_text="Redact",
             secondary_text="Dismiss",
             duration=10000,
         )
@@ -257,7 +251,6 @@ def main():
     bar.disable_requested.connect(lambda m: print(f"disable notifications for {m} min"))
     bar.settings_requested.connect(lambda: print("open settings"))
 
-    # Ctrl+C support: Qt's loop blocks Python signal handling unless we poke it.
     py_signal.signal(py_signal.SIGINT, lambda *_: app.quit())
     tick = QTimer()
     tick.start(200)
@@ -270,6 +263,7 @@ def main():
     app.aboutToQuit.connect(shutdown)
 
     worker.start()
+    app.setQuitOnLastWindowClosed(False)
     sys.exit(app.exec())
 
 

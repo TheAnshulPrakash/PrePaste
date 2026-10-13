@@ -4,20 +4,21 @@
         "version": "v1.0.0 · Beaver",
         "release": "stable",
         "features": []
-    },
-    {
-        "version": "0.0.9",
-        "release": "beta",
-        "features": []
-    },
-    {
-        "version": "0.0.4",
-        "release": "deprecated",
-        "features": []
-    },
-    {
-        "version": "0.0.3",
-        "release": "deprecated",
-        "features": []
     }
+    // Previous versions are removed and no longer maintained
+    // {
+    //     "version": "0.0.9",
+    //     "release": "beta",
+    //     "features": []
+    // },
+    // {
+    //     "version": "0.0.4",
+    //     "release": "deprecated",
+    //     "features": []
+    // },
+    // {
+    //     "version": "0.0.3",
+    //     "release": "deprecated",
+    //     "features": []
+    // }
 ]
