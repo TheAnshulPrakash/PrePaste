@@ -27,6 +27,7 @@ from constants import (
     CANVAS,
     LOGO_IMAGE,
     SUCCESS,
+    MUTED_SOFT,
 )
 
 views = {
@@ -53,7 +54,7 @@ def main(page: ft.Page) -> None:
     nav_buttons: dict[str, ft.Container] = {}
     nav_labels: dict[str, ft.Text] = {}
     content = ft.Column(expand=True, scroll=ft.ScrollMode.AUTO, spacing=18)
-    save_note = ft.Text("Changes save automatically", size=11, color=MUTED)
+    save_note = ft.Text(" ", size=11, color=MUTED)
 
     def notify(message: str) -> None:
         page.snack_bar = ft.SnackBar(ft.Text(message), bgcolor=INK, open=True)
@@ -61,7 +62,7 @@ def main(page: ft.Page) -> None:
 
     def persist(message: str = "Saved") -> None:
         save_settings(state)
-        save_note.value = "Saved just now"
+        save_note.value = "Restart to apply changes"
         if save_note.page:
             save_note.update()
         if message:
@@ -134,7 +135,6 @@ def main(page: ft.Page) -> None:
                                     weight=ft.FontWeight.BOLD,
                                     color=INK,
                                 ),
-                                ft.Text("Privacy, before paste", size=9, color=MUTED),
                             ],
                         ),
                     ],
@@ -239,7 +239,7 @@ def main(page: ft.Page) -> None:
                                         "Restart PrePaste",
                                         icon=ft.Icons.REFRESH_ROUNDED,
                                         style=ft.ButtonStyle(
-                                            bgcolor=PRIMARY, color=ft.Colors.WHITE
+                                            bgcolor=PRIMARY, color=CANVAS
                                         ),
                                         on_click=restart_prepaste,
                                     ),
