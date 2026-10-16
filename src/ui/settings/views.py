@@ -102,8 +102,8 @@ def credentials_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
     return [
         title(
             "Secret detection",
-            "API keys & credentials",
-            "PrePaste checks the format of common secrets locally.",
+            "What should PrePaste protect?",
+            "Choose the information types that should trigger a warning before you paste.",
         ),
         card(*controls),
     ]
