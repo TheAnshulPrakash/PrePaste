@@ -1,5 +1,3 @@
-
-
 from __future__ import annotations
 
 import argparse
@@ -8,9 +6,6 @@ import sys
 
 from config_store import add_history_entry, load_settings
 
-# These are heuristic signatures, not proof that a value is an active credential.
-# They are registered with Presidio, so PII and credential matches are produced by
-# the same `analyzer.analyze()` call for every line.
 API_KEY_PATTERNS: dict[str, re.Pattern[str]] = {
     "OpenAI API key": re.compile(r"(?:sk-[A-Za-z0-9]{48}|sk-proj-[A-Za-z0-9_-]+)"),
     "Anthropic API key": re.compile(r"sk-ant-api03-[A-Za-z0-9_-]{90,100}"),
@@ -31,7 +26,7 @@ API_KEY_PATTERNS: dict[str, re.Pattern[str]] = {
 
 
 def build_analyzer(settings: dict | None = None):
-    """Create one analyzer using the selected PrePaste model and detectors."""
+
     try:
         from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer
         from presidio_analyzer.nlp_engine import NlpEngineProvider
@@ -57,7 +52,6 @@ def build_analyzer(settings: dict | None = None):
         supported_languages=[settings.get("language", "en")],
     )
     for entity_type, pattern in API_KEY_PATTERNS.items():
-        # PatternRecognizer runs a regular expression; it does not invoke NLP.
         analyzer.registry.add_recognizer(
             PatternRecognizer(
                 supported_entity=entity_type,
@@ -68,7 +62,6 @@ def build_analyzer(settings: dict | None = None):
 
 
 def find_sensitive_lines(text: str) -> list[tuple[int, list[str], str]]:
-    """Return line number, detected PII/credential types, and text for each match."""
     settings = load_settings()
     analyzer = build_analyzer(settings)
     selected_entities = [

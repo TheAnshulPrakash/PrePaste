@@ -19,9 +19,9 @@ dev = [
 ]
 
 [tool.flet]
-org = "com.mycompany"
+org = "com.prepaste"
 product = "prepaste"
-company = "Flet"
+company = "PrePaste"
 copyright = "Copyright (C) 2023-2026 by Flet"
 
 [tool.flet.app]
