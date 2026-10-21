@@ -20,9 +20,9 @@ dev = [
 
 [tool.flet]
 org = "com.prepaste"
-product = "prepaste"
+product = "PrePaste"
 company = "PrePaste"
-copyright = "Copyright (C) 2023-2026 by Flet"
+copyright = "Apache-2.0 license"
 
 [tool.flet.app]
 path = "src"
