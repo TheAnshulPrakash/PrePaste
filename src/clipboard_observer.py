@@ -51,7 +51,6 @@ API_PATTERNS = {
 
 
 class PiiWorker(QThread):
-    """Loads Presidio, then monitors the clipboard. Never touches the UI directly."""
 
     ready = Signal()
     pii_found = Signal(list, str)

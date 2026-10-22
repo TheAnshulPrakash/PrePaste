@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 from datetime import datetime
+import os
 from pathlib import Path
 import subprocess
 import time
 import flet as ft
+import sys
+import platform
+import psutil
+
 
 from config_store import (
     load_settings,
@@ -37,6 +42,84 @@ views = {
     "History": history_view,
     "About": about_view,
 }
+
+SYSTEM = platform.system()  # "Windows", "Darwin", "Linux"
+IS_FROZEN = getattr(sys, "frozen", False)
+EXE_SUFFIX = ".exe" if SYSTEM == "Windows" else ""
+
+ROOT_DIR = (
+    Path(sys.executable).parent if IS_FROZEN else Path(__file__).parent.parent.parent
+)
+
+PREPASTE_EXE = ROOT_DIR / "dist" / f"prepaste{EXE_SUFFIX}"
+PREPASTE_SCRIPT = ROOT_DIR / "main.py"
+
+
+def _is_prepaste(proc: psutil.Process) -> bool:
+    name = (proc.info["name"] or "").lower().removesuffix(".exe")
+    if IS_FROZEN:
+        return name == "prepaste"
+
+    if not name.startswith("python"):
+        return False
+    cwd = Path(proc.cwd())
+    for arg in proc.info["cmdline"] or []:
+        if (
+            Path(arg).name == "main.py"
+            and (cwd / arg).resolve() == PREPASTE_SCRIPT.resolve()
+        ):
+            return True
+    return False
+
+
+def _stop_prepaste() -> None:
+    own_pid = os.getpid()
+    for proc in psutil.process_iter(["pid", "name", "cmdline"]):
+        try:
+            if proc.info["pid"] == own_pid or not _is_prepaste(proc):
+                continue
+            for child in proc.children(recursive=True):
+                child.kill()
+            proc.kill()
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+
+
+def _launch_command() -> tuple[list[str], Path] | None:
+    if IS_FROZEN:
+        if SYSTEM == "Darwin":
+            app_bundle = PREPASTE_EXE.with_suffix(".app")
+            if app_bundle.exists():
+                return ["open", "-n", str(app_bundle)], app_bundle.parent
+        if not PREPASTE_EXE.is_file():
+            print(f"Program not found: {PREPASTE_EXE}")
+            return None
+        return [str(PREPASTE_EXE)], PREPASTE_EXE.parent
+
+    if not PREPASTE_SCRIPT.is_file():
+        print(f"Script not found: {PREPASTE_SCRIPT}")
+        return None
+
+    python = Path(sys.executable)
+    if SYSTEM == "Windows":
+        pythonw = python.with_name("pythonw.exe")  # no console window
+        if pythonw.exists():
+            python = pythonw
+    return [str(python), str(PREPASTE_SCRIPT)], PREPASTE_SCRIPT.parent
+
+
+def _spawn_detached(cmd: list[str], cwd: Path) -> None:
+    kwargs: dict = {"cwd": str(cwd)}
+    if SYSTEM == "Windows":
+        kwargs["creationflags"] = getattr(
+            subprocess, "CREATE_NEW_PROCESS_GROUP", 0
+        ) | getattr(subprocess, "DETACHED_PROCESS", 0)
+    else:
+        kwargs["start_new_session"] = True
+        kwargs["stdin"] = subprocess.DEVNULL
+        kwargs["stdout"] = subprocess.DEVNULL
+        kwargs["stderr"] = subprocess.DEVNULL
+    subprocess.Popen(cmd, **kwargs)
 
 
 def main(page: ft.Page) -> None:
@@ -165,58 +248,30 @@ def main(page: ft.Page) -> None:
                                 size=18,
                                 color=PRIMARY,
                             ),
-                            ft.Text("Star Us"),
+                            ft.Text("Star Us ♡"),
                         ],
                     ),
-                ),
-                ft.Row(
-                    spacing=6,
-                    controls=[
-                        ft.Icon(ft.Icons.CHECK_CIRCLE_OUTLINE, size=13, color=SUCCESS),
-                        ft.Text(" All Settings are local", size=10, color=MUTED),
-                    ],
                 ),
             ],
         ),
     )
 
     def restart_prepaste(e):
-        root_dir = Path(__file__).parent.parent
-
-        notification_exe = root_dir / "build_notification" / "prepaste.exe"
-        notif_windows_exe = (
-            root_dir / "build_notif_windows" / "prepaste_win_notification.exe"
-        )
-        for process_name in ("prepaste.exe", "prepaste_dummy.exe"):
-            subprocess.run(
-                ["taskkill", "/F", "/IM", process_name, "/T"],
-                capture_output=True,
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-            )
-
+        _stop_prepaste()
         time.sleep(0.5)
 
-        config = load_settings()
-        show_flet_notification = config.get("show_flet_notification", False)
-
-        exe_path = notif_windows_exe if show_flet_notification else notification_exe
-
-        if not exe_path.is_file():
-            print(f"Program not found: {exe_path}")
+        launch = _launch_command()
+        if launch is None:
+            notify("Could not find PrePaste to restart")
             return
 
+        cmd, cwd = launch
         try:
-            subprocess.Popen(
-                [str(exe_path)],
-                cwd=str(exe_path.parent),
-                creationflags=(
-                    getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
-                    | getattr(subprocess, "DETACHED_PROCESS", 0)
-                ),
-            )
-            print(f"Started: {exe_path.name}")
+            _spawn_detached(cmd, cwd)
+            save_note.value = " "
+            save_note.update()
         except Exception as exc:
-            print(f"Failed to launch: {exc}")
+            notify(f"Failed to launch: {exc}")
 
     page.add(
         ft.Row(

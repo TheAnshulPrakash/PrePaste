@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 import subprocess
+import sys
 
 import flet as ft
 
@@ -217,6 +218,32 @@ def preferences_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
     ]
 
 
+def viewer_command(record_id: str) -> tuple[list[str], str] | None:
+    ui_dir = Path(
+        __file__
+    ).parent.parent  # adjust if your file sits at a different depth
+    project_root = ui_dir.parent
+    exe_path = ui_dir / "viewer" / "redaction_viewer.exe"
+    script_path = ui_dir / "viewer" / "redaction_viewer.py"
+
+    if getattr(sys, "frozen", False):
+        if exe_path.is_file():
+            return [str(exe_path), "--id", record_id], str(exe_path.parent)
+        return None
+
+    if script_path.is_file():
+        py = Path(sys.executable)
+        pyw = py.with_name("pythonw.exe")
+        interpreter = str(pyw if pyw.is_file() else py)
+        return (
+            [interpreter, "-m", "ui.viewer.redaction_viewer", "--id", record_id],
+            str(project_root),
+        )
+    if exe_path.is_file():
+        return [str(exe_path), "--id", record_id], str(exe_path.parent)
+    return None
+
+
 def history_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
     entries = load_history()
 
@@ -227,38 +254,26 @@ def history_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
             notify("This history record cannot be opened")
             return
 
-        try:
-            select_redaction_for_viewer(record_id)
-        except Exception:
-            notify("Could not select this redaction for review")
+        launch = viewer_command(record_id.strip())
+        if launch is None:
+            notify("The redaction viewer was not found")
             return
 
-        root_dir = Path(__file__).parent.parent.parent
-        exe_path = root_dir / "build_viewer" / "prepaste.exe"
-
-        if not exe_path.is_file():
-            notify("Selection saved, but the redaction viewer was not found")
-            return
+        command, cwd = launch
+        print("CMD:", command, "CWD:", cwd)  # remove once working
 
         try:
             subprocess.Popen(
-                [str(exe_path)],
-                cwd=str(exe_path.parent),
+                command,
+                cwd=cwd,
                 creationflags=(
-                    getattr(
-                        subprocess,
-                        "CREATE_NEW_PROCESS_GROUP",
-                        0,
-                    )
-                    | getattr(
-                        subprocess,
-                        "DETACHED_PROCESS",
-                        0,
-                    )
+                    getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+                    | getattr(subprocess, "CREATE_NO_WINDOW", 0)
                 ),
             )
-        except Exception:
-            notify("Could not open the redaction viewer")
+        except Exception as ex:
+            print("Launch failed:", repr(ex))
+            notify(f"Could not open the redaction viewer: {ex}")
 
     def delete_all(e: ft.ControlEvent) -> None:
         clear_history()
@@ -448,7 +463,7 @@ def history_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
 
 
 def about_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
-    github_url = "https://github.com/TheAnshulPrakash/PrePaste"
+    github_url = "https://github.com/TheAnshulPrakash/PrePaste/#prepaste"
     url_launcher = ft.UrlLauncher()
     url = ft.TextField(label="URL to open", value=github_url, expand=True)
 
@@ -461,17 +476,207 @@ def about_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
                 spacing=12,
                 controls=[
                     section_header(
-                        "Contribute",
-                        "Have a feature request, bug report, or test contribution?",
+                        "About PrePaste",
+                        "A safer way to copy and paste.",
                     ),
                     ft.Text(
-                        "Raise an issue or open a PR. We'd really appreciate "
-                        "taking a look.",
+                        "PrePaste is a free, open-source clipboard privacy tool "
+                        "designed to help prevent accidental exposure of "
+                        "personal information and sensitive data.",
+                        size=13,
+                        color=INK,
+                    ),
+                    ft.Text(
+                        "It monitors copied text for potentially sensitive "
+                        "information, including passwords, API keys, and "
+                        "personal details, helping you review and redact "
+                        "content before sharing it.",
                         size=12,
                         color=MUTED,
                     ),
+                ],
+            ),
+        ),
+        card(
+            ft.Column(
+                spacing=12,
+                controls=[
+                    section_header(
+                        "Privacy First",
+                        "Your clipboard. Your control.",
+                    ),
+                    ft.Row(
+                        spacing=10,
+                        vertical_alignment=ft.CrossAxisAlignment.START,
+                        controls=[
+                            ft.Icon(
+                                ft.Icons.LOCK_OUTLINE,
+                                color=PRIMARY,
+                                size=20,
+                            ),
+                            ft.Column(
+                                spacing=4,
+                                expand=True,
+                                controls=[
+                                    ft.Text(
+                                        "Local processing",
+                                        size=12,
+                                        weight=ft.FontWeight.W_600,
+                                        color=INK,
+                                    ),
+                                    ft.Text(
+                                        "Clipboard content is analyzed directly "
+                                        "on your device, without sending it "
+                                        "to external detection services.",
+                                        size=11,
+                                        color=MUTED,
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                    ft.Row(
+                        spacing=10,
+                        vertical_alignment=ft.CrossAxisAlignment.START,
+                        controls=[
+                            ft.Icon(
+                                ft.Icons.HISTORY,
+                                color=PRIMARY,
+                                size=20,
+                            ),
+                            ft.Column(
+                                spacing=4,
+                                expand=True,
+                                controls=[
+                                    ft.Text(
+                                        "Optional local history",
+                                        size=12,
+                                        weight=ft.FontWeight.W_600,
+                                        color=INK,
+                                    ),
+                                    ft.Text(
+                                        "When enabled, redaction history is "
+                                        "stored locally under your Windows "
+                                        "user profile.",
+                                        size=11,
+                                        color=MUTED,
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ),
+        card(
+            ft.Column(
+                spacing=12,
+                controls=[
+                    section_header(
+                        "Local Storage",
+                        "Your data stays with you.",
+                    ),
+                    ft.Text(
+                        "PrePaste stores application preferences and optional "
+                        "redaction history locally under the current user.",
+                        size=12,
+                        color=MUTED,
+                    ),
+                    ft.Text(
+                        "Settings",
+                        size=12,
+                        weight=ft.FontWeight.W_600,
+                        color=INK,
+                    ),
+                    ft.Text(
+                        str(settings_path()),
+                        size=11,
+                        color=MUTED,
+                        selectable=True,
+                    ),
+                    ft.Divider(height=1),
+                    ft.Text(
+                        "History",
+                        size=12,
+                        weight=ft.FontWeight.W_600,
+                        color=INK,
+                    ),
+                    ft.Text(
+                        str(history_path()),
+                        size=11,
+                        color=MUTED,
+                        selectable=True,
+                    ),
+                ],
+            ),
+        ),
+        card(
+            ft.Column(
+                spacing=12,
+                controls=[
+                    section_header(
+                        "Support PrePaste",
+                        "Free, open source, and community-driven.",
+                    ),
+                    ft.Text(
+                        "PrePaste is free to use and open source. "
+                        "Our goal is to make everyday copy-and-paste "
+                        "safer and more privacy-conscious for everyone.",
+                        size=12,
+                        color=INK,
+                    ),
+                    ft.Text(
+                        "If you find PrePaste useful, you can support "
+                        "the project by starring it on GitHub, sharing "
+                        "it with others, or contributing ideas, "
+                        "bug reports, code, and tests.",
+                        size=12,
+                        color=MUTED,
+                    ),
+                    ft.Divider(height=1),
+                    ft.Row(
+                        spacing=10,
+                        vertical_alignment=ft.CrossAxisAlignment.START,
+                        controls=[
+                            ft.Icon(
+                                ft.Icons.FAVORITE_BORDER,
+                                color=PRIMARY,
+                                size=20,
+                            ),
+                            ft.Column(
+                                spacing=5,
+                                expand=True,
+                                controls=[
+                                    ft.Text(
+                                        "Support the maintainers",
+                                        size=12,
+                                        weight=ft.FontWeight.W_600,
+                                        color=INK,
+                                    ),
+                                    ft.Text(
+                                        "Individuals and companies who "
+                                        "believe in the project can also "
+                                        "support its maintainers through "
+                                        "GitHub Sponsors. Sponsorship helps "
+                                        "sustain development, maintenance, "
+                                        "and future improvements.",
+                                        size=12,
+                                        color=MUTED,
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                    ft.Text(
+                        "Every star, share, contribution, and sponsorship "
+                        "helps keep this open-source initiative growing. "
+                        "Thank you for being part of it.",
+                        size=11,
+                        italic=True,
+                        color=MUTED,
+                    ),
                     ft.FilledButton(
-                        "Open GitHub",
+                        "Explore on GitHub",
                         icon=ft.Icons.OPEN_IN_NEW,
                         bgcolor=PRIMARY,
                         on_click=launch_default,
@@ -479,57 +684,29 @@ def about_view(state: dict, persist, refresh, notify) -> list[ft.Control]:
                 ],
             ),
         ),
-        card(
-            ft.Column(
-                spacing=10,
-                controls=[
-                    section_header(
-                        "Local data",
-                        "Stored under the current Windows user.",
-                    ),
-                    ft.Text(
-                        f"Settings: {settings_path()}",
-                        size=11,
-                        color=INK,
-                        selectable=True,
-                    ),
-                    ft.Text(
-                        f"History: {history_path()}",
-                        size=11,
-                        color=INK,
-                        selectable=True,
-                    ),
-                ],
-            ),
-        ),
-        card(
-            ft.Column(
-                spacing=14,
-                controls=[
-                    ft.Text(
-                        "PrePaste monitors your clipboard and checks "
-                        "copied text for personal information and secrets "
-                        "before you paste it somewhere sensitive.",
-                        size=13,
-                        color=INK,
-                    ),
-                    ft.Text(
-                        "Clipboard data stays on your computer. If history "
-                        "is enabled, your redaction history is stored locally "
-                        "under the current Windows user.",
-                        size=12,
-                        color=MUTED,
-                    ),
-                ],
-            ),
-        ),
         ft.Container(
             alignment=ft.Alignment.CENTER,
-            padding=ft.Padding.only(top=4),
-            content=ft.Text(
-                "v1.0.0 · Beaver",
-                size=11,
-                color=MUTED,
+            padding=ft.Padding.symmetric(
+                vertical=16,
+                horizontal=8,
+            ),
+            content=ft.Column(
+                spacing=5,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
+                    ft.Text(
+                        "PrePaste  ·  v1.0.0  ·  Beaver-edition",
+                        size=11,
+                        weight=ft.FontWeight.W_600,
+                        color=INK,
+                    ),
+                    ft.Text(
+                        "Apache-2.0 license",
+                        size=10,
+                        color=MUTED,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                ],
             ),
         ),
     ]

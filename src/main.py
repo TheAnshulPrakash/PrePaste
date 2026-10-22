@@ -1,3 +1,4 @@
+# main.py
 import os
 import re
 import sys
@@ -188,54 +189,61 @@ class PiiWorker(QThread):
 
 def main():
     print("Loading smaller Presidio model...")
-
     app = QApplication(sys.argv)
+    app.setQuitOnLastWindowClosed(False)  # hiding the bar must not quit the app
+
+    worker = PiiWorker()
 
     bar = NotificationBar.starting(menu_items=DEFAULT_MENU_ITEMS)
     bar.show_animated()
 
-    worker = PiiWorker()
+    bar.primary_clicked.connect(worker.request_redact)
+    bar.secondary_clicked.connect(lambda: print("secondary"))
+    bar.option_selected.connect(lambda t: print("selected:", t))
+    bar.disable_requested.connect(lambda m: print(f"disable notifications for {m} min"))
+    bar.settings_requested.connect(lambda: print("open settings"))
 
     def on_ready():
-
-        bar.set_state(
-            status="active",
+        bar.present(
+            status="ready",
             title="PrePaste is ready",
             message="Clipboard protection is active.",
-            loading=False,
-            secondary_text="Dismiss",
-            duration=5000,
-        )
-
-    def on_pii(entities, _text):
-        kinds = ", ".join(sorted({e["entity_type"] for e in entities}))
-        bar.set_state(
-            status="risky",
-            title="Sensitive data detected",
-            message=f"{len(entities)} item(s): {kinds}",
-            loading=False,
-            primary_text="Redact",
             secondary_text="Dismiss",
             duration=10000,
         )
 
+    def on_pii(entities, _text):
+        kinds = ", ".join(sorted({e["entity_type"] for e in entities}))
+        options = [
+            f"Line {e['line']}: {e['entity_type']} ({e['confidence']}%)"
+            for e in entities
+        ]
+        bar.present(
+            status="warning",
+            title="Sensitive data detected",
+            message=f"{len(entities)} item(s): {kinds}",
+            primary_text="Redact",
+            secondary_text="Dismiss",
+            options=options,
+            expand_label="{count} findings",
+            duration=10000,
+        )
+
     def on_redacted(_hid):
-        bar.set_state(
-            status="risky",
+        bar.present(
+            status="valid",
             title="Clipboard redacted",
             message="Sensitive data was replaced.",
-            loading=False,
             secondary_text="Dismiss",
             duration=5000,
         )
 
     def on_failed(msg):
         print(f"Failed to start PrePaste: {msg}")
-        bar.set_state(
-            status="risky",
+        bar.present(
+            status="warning",
             title="PrePaste failed to start",
             message=msg[:120],
-            loading=False,
             secondary_text="Dismiss",
             duration=10000,
         )
@@ -245,25 +253,14 @@ def main():
     worker.redacted.connect(on_redacted)
     worker.failed.connect(on_failed)
 
-    bar.primary_clicked.connect(worker.request_redact)
-    bar.secondary_clicked.connect(lambda: print("secondary"))
-    bar.option_selected.connect(lambda t: print("selected:", t))
-    bar.disable_requested.connect(lambda m: print(f"disable notifications for {m} min"))
-    bar.settings_requested.connect(lambda: print("open settings"))
-
     py_signal.signal(py_signal.SIGINT, lambda *_: app.quit())
     tick = QTimer()
     tick.start(200)
     tick.timeout.connect(lambda: None)
 
-    def shutdown():
-        worker.stop()
-        worker.wait(2000)
-
-    app.aboutToQuit.connect(shutdown)
+    app.aboutToQuit.connect(lambda: (worker.stop(), worker.wait(2000)))
 
     worker.start()
-    app.setQuitOnLastWindowClosed(False)
     sys.exit(app.exec())
 
 

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import sys
 from typing import Any
+import argparse
 
 import flet as ft
 
@@ -27,6 +29,14 @@ from constants import (
     WARNING_TEXT,
     ALERT_TEXT,
 )
+
+
+def get_cli_id(argv: list[str] | None = None) -> str | None:
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--id", "-id", "--redaction-id", dest="id", default=None)
+    args, _ = parser.parse_known_args(sys.argv[1:] if argv is None else argv)
+    value = (args.id or "").strip()
+    return value or None
 
 
 def _read_json(path: Path) -> tuple[Any | None, str | None]:
@@ -104,16 +114,25 @@ def resolve_record() -> tuple[dict[str, Any] | None, str, str | None]:
     if not records:
         return None, "", "No valid redaction records were found."
 
-    selected_id, selection_error = load_selected_id()
-    if selected_id:
+    cli_id = get_cli_id()
+    if cli_id:
         for record in records:
-            if record["id"] == selected_id:
-                return record, "Selected redaction", None
-        fallback_note = "Selected ID was not found"
+            if record["id"] == cli_id:
+                return record, "Requested redaction", None
+        fallback_note = f"Requested ID '{cli_id}' was not found"
+        selection_error = None
+        selected_id = None
     else:
-        fallback_note = (
-            "No usable selection file" if selection_error else "No selected ID"
-        )
+        selected_id, selection_error = load_selected_id()
+        if selected_id:
+            for record in records:
+                if record["id"] == selected_id:
+                    return record, "Selected redaction", None
+            fallback_note = "Selected ID was not found"
+        else:
+            fallback_note = (
+                "No usable selection file" if selection_error else "No selected ID"
+            )
 
     newest = max(records, key=lambda record: str(record.get("timestamp", "")))
     return (
